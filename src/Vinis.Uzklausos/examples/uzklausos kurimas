@@ -1,0 +1,18 @@
+POST http://localhost:5000/Uzklausos/
+
+{
+    "tipas": "Telefonu",
+    "iniciatorius": 1,
+    "gavejas": 2,
+    "skyrius": 7,
+    "kategorija": 15,
+    "vykdytojas": 2,
+    "ivykdytiIki": "2016-09-10T09:00:00.000Z",
+    "prioritetas": "Kritinis",
+    "pavadinimas": "Skambino vaitiekus",
+    "tekstas": "Nu kaip mane jie uzkniso."
+}
+
+Response:
+HTTP 1.1 201 Created
+Location: http://localhost:5000/Uzklausos/1
