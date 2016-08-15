@@ -16,6 +16,22 @@ CREATE TABLE `vinis`.`Uzklausos` (
   `tekstas` TEXT NOT NULL,
   PRIMARY KEY (`id`));
 
+CREATE TABLE `vinis`.`UzklausuEiga` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `uzklausos_id` INT NOT NULL,
+  `data` DATETIME NOT NULL,
+  `turinys` TEXT NOT NULL,
+  PRIMARY KEY (`id`));
+
+ALTER TABLE `vinis`.`Uzklausos` 
+ADD COLUMN `statusas` VARCHAR(15) NULL AFTER `tekstas`;
+
+UPDATE Uzklausos
+SET statusas = 'Iregistruota'
+WHERE  Uzklausos.statusas is null;
+
+ALTER TABLE `vinis`.`Uzklausos` 
+CHANGE COLUMN `statusas` `statusas` VARCHAR(15) NOT NULL ;
 
 CREATE SCHEMA `asmenys` ;
 
@@ -31,3 +47,5 @@ CREATE TABLE `asmenys`.`asmenys` (
   `sukurimo_data` DATETIME NOT NULL,
   `atnaujinimo_data` DATETIME NOT NULL,
   PRIMARY KEY (`id`));
+
+

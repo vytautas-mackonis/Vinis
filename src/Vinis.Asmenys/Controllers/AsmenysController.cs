@@ -15,12 +15,107 @@ namespace Vinis.Asmenys.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            return null;
+            using (
+                var conn =
+                    new MySql.Data.MySqlClient.MySqlConnection(
+                        "server=192.168.99.100;uid=root;pwd=abc123;database=asmenys;"))
+            {
+                conn.Open();
+
+                using (MySqlCommand command = conn.CreateCommand())
+                {
+                    command.CommandText = @"SELECT  t.sistema_id, t.vardas_pavarde_pavadinimas, t.asmens_kodas, t.istaiga, t.telefonas, t.el_pastas, t.papildoma_informacija, t.sukurimo_data, t.atnaujinimo_data
+                                            FROM asmenys t
+                                            where t.id = ?idas;";
+                    command.Parameters.AddWithValue("?idas", id);
+
+                    MySqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.Read())
+                    {
+                        var asmuo = new Asmuo();
+                        asmuo.Id = id;
+                         if (!reader.IsDBNull(0))
+                        {
+                            asmuo.SistemaId = reader.GetInt32(0);
+                        }
+                        asmuo.VardasPavardePavadinimas = reader.GetString(1);
+                        asmuo.AsmensKodas = reader.GetInt64(2);
+                        asmuo.Istaiga = reader.GetString(3);
+                        asmuo.Telefonas = reader.GetString(4);
+                        asmuo.ElPastas = reader.GetString(5);
+                        asmuo.PapildomaInformacija = reader.GetString(6);
+                        asmuo.SukurimoData = reader.GetDateTime(7);
+                        asmuo.AtnaujinimoData = reader.GetDateTime(8);
+
+                        return Ok(asmuo);
+                    }
+                    else return NotFound();
+                }
+            }
 
 
 
         }
 
+        [HttpGet]
+        public List<Asmuo> GetAll([FromQuery] AsmensFiltras filtras)
+        {
+            using (
+                var conn =
+                    new MySql.Data.MySqlClient.MySqlConnection(
+                        "server=192.168.99.100;uid=root;pwd=abc123;database=asmenys;"))
+            {
+                conn.Open();
+
+                using (MySqlCommand command = conn.CreateCommand())
+                {
+                    command.CommandText = @"SELECT t.sistema_id, t.vardas_pavarde_pavadinimas, t.asmens_kodas, t.istaiga, t.telefonas, t.el_pastas, t.papildoma_informacija, t.sukurimo_data, t.atnaujinimo_data,  t.id
+                                            FROM asmenys t
+                                            where (t.vardas_pavarde_pavadinimas like concat('%',?vardas_pavarde_pavadinimas,'%') or ?vardas_pavarde_pavadinimas is null)
+                                            and (t.asmens_kodas = ?asmens_kodas or ?asmens_kodas is null)
+                                            and (t.istaiga like concat('%',?istaiga,'%') or ?istaiga is null)
+                                            and (t.telefonas like concat('%',?telefonas,'%') or ?telefonas is null)
+                                            and (t.el_pastas like concat('%',?el_pastas,'%') or ?el_pastas is null)
+                                            and (t.papildoma_informacija like concat('%',?papildoma_informacija,'%') or ?papildoma_informacija is null)
+                                           ";
+                    command.Parameters.AddWithValue("?vardas_pavarde_pavadinimas", filtras.VardasPavardePavadinimas);
+                    command.Parameters.AddWithValue("?asmens_kodas", filtras.AsmensKodas);
+                    command.Parameters.AddWithValue("?istaiga", filtras.Istaiga);
+                    command.Parameters.AddWithValue("?telefonas", filtras.Telefonas);
+                    command.Parameters.AddWithValue("?el_pastas", filtras.ElPastas);
+                    command.Parameters.AddWithValue("?papildoma_informacija", filtras.PapildomaInformacija);
+
+
+                    MySqlDataReader reader = command.ExecuteReader();
+                    var asmenys = new List<Asmuo>();
+                    while (reader.Read())
+                    {
+                        var asmuo = new Asmuo();
+                        if (!reader.IsDBNull(0))
+                        {
+                            asmuo.SistemaId = reader.GetInt32(0);
+                        }
+                        asmuo.VardasPavardePavadinimas = reader.GetString(1);
+                        asmuo.AsmensKodas = reader.GetInt64(2);
+                        asmuo.Istaiga = reader.GetString(3);
+                        asmuo.Telefonas = reader.GetString(4);
+                        asmuo.ElPastas = reader.GetString(5);
+                        asmuo.PapildomaInformacija = reader.GetString(6);
+                        asmuo.SukurimoData = reader.GetDateTime(7);
+                        asmuo.AtnaujinimoData = reader.GetDateTime(8);
+                        asmuo.Id = reader.GetInt32(9);
+                        asmenys.Add(asmuo);
+                    }
+                    return asmenys;
+                }
+
+
+            }
+
+
+
+        }
 
         [HttpPost]
         public IActionResult Post([FromBody] AsmensKurimoRequest value)
@@ -73,6 +168,17 @@ namespace Vinis.Asmenys.Controllers
 
     }
 
+    public class AsmensFiltras
+    {
+        public string VardasPavardePavadinimas { get; set; }
+        public long? AsmensKodas { get; set; }
+        public string Istaiga { get; set; }
+        public string Telefonas { get; set; }
+        public string ElPastas { get; set; }
+        public string PapildomaInformacija { get; set; }
+    }
+
+
     public class AsmensKurimoRequest
     {
         public string VardasPavardePavadinimas { get; set; }
@@ -81,5 +187,20 @@ namespace Vinis.Asmenys.Controllers
         public string Telefonas { get; set; }
         public string ElPastas { get; set; }
         public string PapildomaInformacija { get; set; }
+    }
+
+    public class Asmuo
+    {
+        public int Id { get; set; }
+        public int? SistemaId { get; set; }
+        public string VardasPavardePavadinimas { get; set; }
+        public long AsmensKodas { get; set; }
+        public string Istaiga { get; set; }
+        public string Telefonas { get; set; }
+        public string ElPastas { get; set; }
+        public string PapildomaInformacija { get; set; }
+        public DateTime SukurimoData { get; set; }
+        public DateTime AtnaujinimoData { get; set; }
+
     }
 }
